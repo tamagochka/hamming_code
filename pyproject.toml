@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=80", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hamming_code"
+version = "0.1.0"
+description = "Generate Hamming code and correct error in received code."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "tamagochka", email = "tamagochka@gmail.com" }]
+
+[tool.setuptools.packages.find]
+where = ["src"]

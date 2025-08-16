@@ -1,4 +1,4 @@
-from hamming_code import encode, decode
+from src.hamming_code import encode, decode
 
 print(f'----------------------------------------------')
 print(f'|{'num':<5}| {'bit':<4}| {'code':<6}| {'bit':<4}| {'rest':<5}| {'err':<4}| {'bit':<4}|')

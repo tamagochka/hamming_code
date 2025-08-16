@@ -1,4 +1,3 @@
-from math import log2, ceil
 from sys import exit
 
 import argparse
