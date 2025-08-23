@@ -7,49 +7,49 @@ DEBUG = False
 
 BE = 1
 """
-порядок бит big-endian от старшего бита к младшему слева на право
+Порядок бит big-endian от старшего бита к младшему слева на право.
 """
 
 LE = 0
 """
-порядок бит little-endian от младшего бита к старшему слева на право
+Порядок бит little-endian от младшего бита к старшему слева на право.
 """
 
 
 def calc_info_bits_count_from_code(code_bits_count: int) -> int:
     """
-    Вычисление количества информационных бит, которое было использовано при генерации кода Хэмминга заданной длинны
+    Вычисление количества информационных бит, которое было использовано при генерации кода Хэмминга заданной длинны.
 
     Parameters
     ----------
     code_bits_count: int
-        количество бит кода Хэмминга
+        Количество бит кода Хэмминга.
 
     Returns
     -------
     int
-        количество информационных бит
+        Количество информационных бит.
     """
     for parity_bits_count in range(code_bits_count):
         info_bits_count = code_bits_count - parity_bits_count
         if 2 ** parity_bits_count >= info_bits_count + parity_bits_count + 1:
             return info_bits_count
-    raise ValueError('Некорректная длинна кода Хэмминга')
+    raise ValueError('Некорректная длинна кода Хэмминга.')
 
 
 def calc_parity_bits_count(info_bits_count: int) -> int:
     """
-    Вычисление количества бит четности, которое необходимо для кодирования заданного количества информационных бит
+    Вычисление количества бит четности, которое необходимо для кодирования заданного количества информационных бит.
 
     Parameters
     ----------
     info_bits_count: int
-        количетво инфомрационных бит
+        Количетво инфомрационных бит.
 
     Returns
     -------
     int
-        количество бит четности
+        Количество бит четности.
     """
     parity_bits_count = 0
     while 1 << parity_bits_count < info_bits_count + parity_bits_count + 1:
@@ -59,17 +59,17 @@ def calc_parity_bits_count(info_bits_count: int) -> int:
 
 def int_to_bits_array(num: int, endianness=BE) -> list[int]:
     """
-    Преобразует число в массив бит
+    Преобразует число в массив бит.
 
     Parameters
     ----------
     num: int
-        число
+        Число.
 
     Returns
     -------
     list[int]
-        массив бит
+        Массив бит.
     """
     bits = [num >> i & 1 for i in range(num.bit_length() - 1,-1,-1)]
     if not endianness:
@@ -79,17 +79,17 @@ def int_to_bits_array(num: int, endianness=BE) -> list[int]:
 
 def bits_array_to_int(bits: list[int], endianness=BE) -> int:
     """
-    Преобразует массив бит в число
+    Преобразует массив бит в число.
 
     Parameters
     ----------
     bits: list[int]
-        массив бит
+        Массив бит.
 
     Returns
     -------
     int
-        число
+        Число.
     """
 
     if not endianness:
@@ -102,17 +102,23 @@ def bits_array_to_int(bits: list[int], endianness=BE) -> int:
 
 def encode_bits(info: list[int], endianness: int = BE, cut_ins = False) -> list[int]:
     """
-    Генерация кода Хэмминга для заданного массива информационных бит
+    Генерация кода Хэмминга для заданного массива информационных бит. \
+    Весь массив входящиъ бит рассматривается как одно информационное \
+    слово для которого генерируется код Хэмминга с соответствующим количеством бит четности.
 
     Parameters
     ----------
     info: list[int]
-        массив информационных бит, который необходимо закодировать
+        Массив информационных бит, который необходимо закодировать.
+    endianness: int = BE
+        Порядок бит big-endian (BE = 1) или little-endian (LE = 0).
+    cut_ins: bool = False
+        Отрезать незначащие нули в начале или конце массива информационных бит.
 
     Returns
     -------
     list[int]
-        код Хэмминга
+        Код Хэмминга.
     """
 
     if cut_ins:  # отрезаем незначащие нули
@@ -168,17 +174,22 @@ def encode_bits(info: list[int], endianness: int = BE, cut_ins = False) -> list[
 
 def decode_bits(code: list[int], endianness: int = BE) -> tuple[list[int], int]:
     """
-    Восстановление массива информационных бит из кода Хэмминга
+    Восстановление массива информационных бит из кода Хэмминга. \
+    Весь массив входящих бит рассматривается как одно кодовое слово \
+    с соответствующим количеством бит четности, \
+    из которого восстанавливаются информационные биты и позиция ошибки, если она была.
 
     Parameters
     ----------
     code: list[int]
-        массив бит кода Хэмминга
+        Массив бит кода Хэмминга.
+    endianness: int = BE
+        Порядок бит big-endian (BE = 1) или little-endian (LE = 0).
 
     Returns
     -------
     list[int]
-        восстановленный массив информационных бит, позиция ошибки или 0 если ошибки не было
+        Восстановленный массив информационных бит, позиция ошибки или 0 если ошибки не было.
     """
 
     # если порядок байтов big-endian, то переворачиваем массив бит
@@ -222,19 +233,19 @@ def decode_bits(code: list[int], endianness: int = BE) -> tuple[list[int], int]:
 
 def encode_int(info_num: int, endianness: int = BE) -> tuple[int, int]:
     """
-    Генерация кода Хэмминга для заданных информационных бит в виде целого числа
+    Генерация кода Хэмминга для заданных информационных бит в виде целого числа.
 
     Parameters
     ----------
     info: int
-        информационные биты, которые необходимо закодировать, в виде целого числа
+        Информационные биты, которые необходимо закодировать, в виде целого числа.
     endianness: int = BE
-        порядок бит big-endian (BE = 1) или little-endian (LE = 0)
+        Порядок бит big-endian (BE = 1) или little-endian (LE = 0).
 
     Returns
     -------
     tuple[int, int]
-        код Хэмминга в виде целого числа, размер кода в битах
+        Код Хэмминга в виде целого числа, размер кода в битах.
     """
 
     info_bits = int_to_bits_array(info_num, endianness=endianness)
@@ -245,19 +256,19 @@ def encode_int(info_num: int, endianness: int = BE) -> tuple[int, int]:
 
 def decode_int(code_num: int, endianness: int = BE) -> tuple[int, int, int]:
     """
-    Восстановление информационных бит из кода Хэмминга в виде целого числа
+    Восстановление информационных бит из кода Хэмминга в виде целого числа.
 
     Parameters
     ----------
     code: int
-        код Хэмминга в виде целого числа
+        Код Хэмминга в виде целого числа.
     endianness: int = BE
-        порядок бит big-endian (BE = 1) или little-endian (LE = 0)
+        Порядок бит big-endian (BE = 1) или little-endian (LE = 0).
 
     Returns
     -------
     tuple[int, int, int]
-        восстановленные информационные биты в виде целого числа, позиция ошибки или 0 если ошибки не было, количество информационных бит
+        Восстановленные информационные биты в виде целого числа, позиция ошибки или 0 если ошибки не было, количество информационных бит.
     """
 
     code_bits = int_to_bits_array(code_num, endianness=endianness)
@@ -266,27 +277,73 @@ def decode_int(code_num: int, endianness: int = BE) -> tuple[int, int, int]:
     return info_num, error, len(info_bits)
 
 
-# def encode_bit_array(bit_array: list[int], code_word_size: int) -> list[int]:
-#     tmp = []
-#     for i in range(len(bit_array)):
-#         # отделяем code_word_size бит от массива
-#         tmp.append(bit_array[i])
-#         if not(i + 1) % code_word_size:
-#             val = 0
-#             # преобразуем биты в число
-#             for b in tmp:
-#                 val = (val << 1) | b
-#             print(f'code word: {tmp}, val: {val}', end=', ')
-#             # кодируем число
-#             code, code_len = encode_int(val)
-#             print(f'code: {code}, code_len: {code_len}')
-#             val = code
-#             for j in range(code_len):
-#                 b = (val >> j) & 1
-#                 print(b)
-#             print()
-#             tmp = []
-#     return []
+def encode_bit_array(info_bits_array: list[int], info_word_size: int, endianness: int = BE) -> tuple[list[int], int]:
+    """
+    Генерация кода Хэмминга для заданного массива информационных бит с заданной длинной слова. \
+    Весь массив входящих бит рассматривается как несколько информационных слов, \
+    для которых генерируется код Хэмминга с соответствующим количеством бит четности.
+
+    Parameters
+    ----------
+    info_bits_array: list[int]
+        Массив информационных бит, который необходимо закодировать.
+    info_word_size: int
+        Размер информационного слова в битах.
+    endianness: int = BE
+        Порядок бит big-endian (BE = 1) или little-endian (LE = 0).
+    Returns
+    -------
+    tuple[list[int], int]
+        Код Хэмминга, размер кодового слова в битах.
+    """
+
+    code_word_size = info_word_size + calc_parity_bits_count(info_word_size)
+    code_bits_array = []
+    tmp = []
+    for i in range(len(info_bits_array)):
+        tmp.append(info_bits_array[i])
+        if not (i + 1) % info_word_size:
+            tmp_code = encode_bits(tmp, endianness=endianness)
+            code_bits_array = code_bits_array + tmp_code
+            tmp = []
+    return code_bits_array, code_word_size
+
+
+def decode_bit_array(code_bits_array: list[int], code_word_size: int, endianness: int = BE) -> tuple[list[int], int]:
+    """
+    Восстановление массива информационных бит из кода Хэмминга. \
+    Весь массив входящих бит рассматривается как несколько кодовых слов \
+    с соответствующим количеством бит четности, из которых восстанавливаются \
+    информационные биты и позиция ошибки, если она была.
+
+    Parameters
+    ----------
+    code_bits_array: list[int]
+        Массив бит кода Хэмминга.
+    code_word_size: int
+        Размер кодового слова в битах.
+    endianness: int = BE
+        Порядок бит big-endian (BE = 1) или little-endian (LE = 0).
+    Returns
+    -------
+    tuple[list[int], int]
+        Восстановленный массив информационных бит, \
+        размер информационного слова в битах, \
+        массив бит ошибок (1 - ошибка в i-м кодовом слове, 0 - без ошибки).
+    """
+
+    info_word_size = calc_info_bits_count_from_code(code_word_size)
+    info_bits_array = []
+    tmp = []
+    error_words = []
+    for i in range(len(code_bits_array)):
+        tmp.append(code_bits_array[i])
+        if not (i + 1) % code_word_size:
+            tmp_info, error = decode_bits(tmp, endianness=endianness)
+            error_words.append(1 if error else 0)
+            info_bits_array = info_bits_array + tmp_info
+            tmp = []
+    return info_bits_array, info_word_size, error_words
 
 
 if __name__ == '__main__':
