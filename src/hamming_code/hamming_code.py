@@ -103,7 +103,7 @@ def bits_array_to_int(bits: list[int], endianness=BE) -> int:
 def encode_bits(info: list[int], endianness: int = BE, cut_ins = False) -> list[int]:
     """
     Генерация кода Хэмминга для заданного массива информационных бит. \
-    Весь массив входящиъ бит рассматривается как одно информационное \
+    Весь массив входящих бит рассматривается как одно информационное \
     слово для которого генерируется код Хэмминга с соответствующим количеством бит четности.
 
     Parameters
@@ -121,6 +121,7 @@ def encode_bits(info: list[int], endianness: int = BE, cut_ins = False) -> list[
         Код Хэмминга.
     """
 
+    info = info.copy()
     if cut_ins:  # отрезаем незначащие нули
         if endianness:
             while not info[0]: del info[0]
@@ -188,10 +189,11 @@ def decode_bits(code: list[int], endianness: int = BE) -> tuple[list[int], int]:
 
     Returns
     -------
-    list[int]
+    tuple[list[int], int]
         Восстановленный массив информационных бит, позиция ошибки или 0 если ошибки не было.
     """
 
+    code = code.copy()
     # если порядок байтов big-endian, то переворачиваем массив бит
     if endianness: code.reverse()
     code_bits_count = len(code)  # сколько бит занимает code (код Хэмминга)
@@ -227,8 +229,177 @@ def decode_bits(code: list[int], endianness: int = BE) -> tuple[list[int], int]:
             info[info_pos] = code[i - 1]
             info_pos += 1
     # если порядок байтов big-endian, то переворачиваем массив
-    if endianness: info.reverse()
+    if endianness:
+        info.reverse()
+        if error_pos != 0:
+            error_pos = code_bits_count - error_pos + 1
+
     return info, error_pos
+
+
+def encode_bits_secded(info: list[int], endianness: int = BE) -> list[int]:
+    """
+    Генерация кода SECDED (Single Error Correction Double Error Detection) \
+    кода Хэмминга с дополнительной проверкой четности для заданного массива информационных бит. \
+    Весь массив входящих бит рассматривается как одно информационное \
+    слово для которого генерируется код SECDED с соответствующим количеством бит четности.
+
+    Parameters
+    ----------
+    info: list[int]
+        Массив информационных бит, который необходимо закодировать.
+    endianness: int = BE
+        Порядок бит big-endian (BE = 1) или little-endian (LE = 0).
+
+    Returns
+    -------
+    list[int]
+        Код SECDED.
+    """
+    code = encode_bits(info, endianness=endianness)
+    # добавляем дополнительный бит четности
+    parity = 0
+    for bit in code:
+        parity ^= bit
+    code.append(parity)
+    return code
+
+
+def decode_bits_secded(code: list[int], endianness: int = BE) -> tuple[list[int], int]:
+    """
+    Восстановление массива информационных бит из кода SECDED (Single Error Correction Double Error Detection) \
+    кода Хэмминга с дополнительной проверкой четности. \
+    Весь массив входящих бит рассматривается как одно кодовое слово \
+    с соответствующим количеством бит четности, \
+    из которого восстанавливаются информационные биты и позиция ошибки, если она была. \
+    Если была обнаружена двойная ошибка, то позиция ошибки будет -1.
+
+    Parameters
+    ----------
+    code: list[int]
+        Массив бит кода SECDED.
+    endianness: int = BE
+        Порядок бит big-endian (BE = 1) или little-endian (LE = 0).
+
+    Returns
+    -------
+    tuple[list[int], int]
+        Восстановленный массив информационных бит, \
+        позиция ошибки (или -1 если обнаружена двойная ошибка) или 0 если ошибки не было.
+    """
+
+    if len(code) < 2:
+        raise ValueError('Длинна кода SECDED должна быть не менее 2 бит.')
+    parity = 0
+    for bit in code:
+        parity ^= bit
+    # отделяем дополнительный бит четности
+    code = code.copy()
+    del code[-1]
+    info, error_pos = decode_bits(code, endianness=endianness)
+    if parity == 0 and error_pos != 0:
+        error_pos = -1  # обнаружена двойная ошибка
+    return info, error_pos
+
+
+def bitstr_to_bits_array(bitstr: str) -> list[int]:
+    """
+    Преобразует строку из символов '0' и '1' в массив бит.
+
+    Parameters
+    ----------
+    bitstr: str
+        Строка из символов '0' и '1'.
+
+    Returns
+    -------
+    list[int]
+        Массив бит.
+    """
+
+    bits = []
+    for ch in bitstr:
+        if ch == '0':
+            bits.append(0)
+        elif ch == '1':
+            bits.append(1)
+        else:
+            raise ValueError('Строка должна содержать только символы 0 и 1.')
+    return bits
+
+
+def bits_array_to_bitstr(bits: list[int]) -> str:
+    """
+    Преобразует массив бит в строку из символов '0' и '1'.
+
+    Parameters
+    ----------
+    bits: list[int]
+        Массив бит.
+
+    Returns
+    -------
+    str
+        Строка из символов '0' и '1'.
+    """
+    
+    bitstr = ''
+    for bit in bits:
+        if bit not in (0, 1):
+            raise ValueError('Массив бит должен содержать только 0 и 1.')
+        bitstr += str(bit)
+    return bitstr
+
+
+def encode_str(info_str: str, endianness: int = BE) -> str:
+    """
+    Генерация кода Хэмминга для заданной строки из символов '0' и '1'. \
+    Вся строка входящих бит рассматривается как одно информационное \
+    слово для которого генерируется код Хэмминга с соответствующим количеством бит четности.
+
+    Parameters
+    ----------
+    info_str: str
+        Строка из символов '0' и '1', которую необходимо закодировать.
+    endianness: int = BE
+        Порядок бит big-endian (BE = 1) или little-endian (LE = 0).
+
+    Returns
+    -------
+    str
+        Код Хэмминга в виде строки из символов '0' и '1'.
+    """
+    
+    info_bits = bitstr_to_bits_array(info_str)
+    code_bits = encode_bits(info_bits, endianness=endianness)
+    code_str = bits_array_to_bitstr(code_bits)
+    return code_str
+
+
+def decode_str(code_str: str, endianness: int = BE) -> tuple[str, int]:
+    """
+    Восстановление строки бит (из символов '0' и '1') из кода Хэмминга в виде строки. \
+    Веся строка входящих бит рассматривается как одно кодовое слово \
+    с соответствующим количеством бит четности, \
+    из которого восстанавливаются информационные биты в виде строки и позиция ошибки, если она была.
+
+    Parameters
+    ----------
+    code_str: str
+        Код Хэмминга в виде строки из символов '0' и '1'.
+    endianness: int = BE
+        Порядок бит big-endian (BE = 1) или little-endian (LE = 0).
+
+    Returns
+    -------
+    tuple[str, int]
+        Восстановленная строка из символов '0' и '1', позиция ошибки или 0 если ошибки не было.
+    """
+    
+    code_bits = bitstr_to_bits_array(code_str)
+    info_bits, error = decode_bits(code_bits, endianness=endianness)
+    info_str = bits_array_to_bitstr(info_bits)
+    return info_str, error
 
 
 def encode_int(info_num: int, endianness: int = BE) -> tuple[int, int]:
@@ -329,7 +500,7 @@ def decode_bit_array(code_bits_array: list[int], code_word_size: int, endianness
     tuple[list[int], int]
         Восстановленный массив информационных бит, \
         размер информационного слова в битах, \
-        массив бит ошибок (1 - ошибка в i-м кодовом слове, 0 - без ошибки).
+        массив бит ошибок (позиция ошибки в i-м кодовом слове, 0 - без ошибки).
     """
 
     info_word_size = calc_info_bits_count_from_code(code_word_size)
@@ -340,7 +511,7 @@ def decode_bit_array(code_bits_array: list[int], code_word_size: int, endianness
         tmp.append(code_bits_array[i])
         if not (i + 1) % code_word_size:
             tmp_info, error = decode_bits(tmp, endianness=endianness)
-            error_words.append(1 if error else 0)
+            error_words.append(error)
             info_bits_array = info_bits_array + tmp_info
             tmp = []
     return info_bits_array, info_word_size, error_words
@@ -349,19 +520,19 @@ def decode_bit_array(code_bits_array: list[int], code_word_size: int, endianness
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Кодирование/декодирование данных в код Хэмминга')
     parser.add_argument('action', help='encode или decode')
-    parser.add_argument('data', help='данные для кодирования')
+    parser.add_argument('data', help='данные для кодирования в виде сплошной строки из символов 0 и 1')
     parser.add_argument('-d', '--debug', help='debug', action='store_true')
     args = parser.parse_args()
 
     if args.debug: DEBUG = True
 
     function_map = {
-        'encode': encode_int,
-        'decode': decode_int
+        'encode': encode_str,
+        'decode': decode_str
     }
     selected_function = function_map.get(args.action)
     if selected_function:
-        print(selected_function(int(args.data)))
+        print(selected_function(args.data))
 
     exit()
     
